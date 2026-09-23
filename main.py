@@ -5,20 +5,30 @@ import time
 mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
 
-cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+cap = cv2.VideoCapture(0)
 
 if not cap.isOpened():
     print("ERROR: Could not open webcam.")
     exit()
+
+frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+if frame_width == 0 or frame_height == 0:
+    frame_width = 640
+    frame_height = 480
+
+fps = 20.0
 
 points = 0
 last_hand_state = "NONE"
 reward_ready = False
 success_message_until = 0
 
-BIN_WIDTH = 180
-BIN_HEIGHT = 180
+BIN_WIDTH = 220
+BIN_HEIGHT = 220
 SUCCESS_MESSAGE_SECONDS = 1.5
+HAND_BOX_PADDING = 20
 
 def count_extended_fingers(hand_landmarks, handedness_label):
     fingers_up = 0
@@ -54,6 +64,17 @@ def get_hand_state(hand_landmarks, handedness_label):
     else:
         return "PARTIAL"
 
+def get_hand_bounding_box(hand_landmarks, frame_width, frame_height, padding=0):
+    x_coords = [int(lm.x * frame_width) for lm in hand_landmarks.landmark]
+    y_coords = [int(lm.y * frame_height) for lm in hand_landmarks.landmark]
+
+    x_min = max(min(x_coords) - padding, 0)
+    y_min = max(min(y_coords) - padding, 0)
+    x_max = min(max(x_coords) + padding, frame_width)
+    y_max = min(max(y_coords) + padding, frame_height)
+
+    return x_min, y_min, x_max, y_max
+
 with mp_hands.Hands(
     static_image_mode=False,
     max_num_hands=1,
@@ -72,13 +93,12 @@ with mp_hands.Hands(
         results = hands.process(rgb_frame)
 
         h, w, _ = frame.shape
+        now = time.time()
 
         bin_x1 = w - BIN_WIDTH - 40
         bin_y1 = h - BIN_HEIGHT - 40
         bin_x2 = w - 40
         bin_y2 = h - 40
-
-        now = time.time()
 
         if now < success_message_until:
             status_text = "Trash disposed! +10"
@@ -125,8 +145,23 @@ with mp_hands.Hands(
             index_y = int(index_tip.y * h)
 
             current_hand_state = get_hand_state(hand_landmarks, handedness_label)
-            in_bin_zone = bin_x1 <= index_x <= bin_x2 and bin_y1 <= index_y <= bin_y2
 
+            hand_x1, hand_y1, hand_x2, hand_y2 = get_hand_bounding_box(
+                hand_landmarks, w, h, HAND_BOX_PADDING
+            )
+
+            hand_fits_in_bin = (
+                hand_x1 >= bin_x1 and
+                hand_y1 >= bin_y1 and
+                hand_x2 <= bin_x2 and
+                hand_y2 <= bin_y2
+            )
+
+            hand_box_color = (255, 0, 0)
+            if hand_fits_in_bin:
+                hand_box_color = (0, 255, 0)
+
+            cv2.rectangle(frame, (hand_x1, hand_y1), (hand_x2, hand_y2), hand_box_color, 2)
             cv2.circle(frame, (index_x, index_y), 10, (0, 0, 255), -1)
 
             if current_hand_state == "FIST":
@@ -134,21 +169,20 @@ with mp_hands.Hands(
                 if now >= success_message_until:
                     status_text = "Holding trash"
 
-            elif reward_ready and last_hand_state == "FIST" and current_hand_state == "OPEN" and in_bin_zone:
+            elif reward_ready and last_hand_state == "FIST" and current_hand_state == "OPEN" and hand_fits_in_bin:
                 points += 10
                 reward_ready = False
                 success_message_until = time.time() + SUCCESS_MESSAGE_SECONDS
                 status_text = "Trash disposed! +10"
                 status_color = (0, 255, 0)
-                bin_color = (0, 255, 0)
 
-            elif reward_ready and current_hand_state == "OPEN" and not in_bin_zone:
+            elif reward_ready and current_hand_state == "OPEN" and not hand_fits_in_bin:
                 if now >= success_message_until:
-                    status_text = "Open hand near bin"
+                    status_text = "Fit whole hand inside bin"
 
             elif reward_ready:
                 if now >= success_message_until:
-                    status_text = "Move to bin and open hand"
+                    status_text = "Move hand into bin and open"
 
             else:
                 if now >= success_message_until:
@@ -194,6 +228,16 @@ with mp_hands.Hands(
                 2,
                 cv2.LINE_AA
             )
+            cv2.putText(
+                frame,
+                f"Hand In Bin: {hand_fits_in_bin}",
+                (10, 150),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.7,
+                hand_box_color,
+                2,
+                cv2.LINE_AA
+            )
 
             last_hand_state = current_hand_state
 
@@ -205,7 +249,7 @@ with mp_hands.Hands(
         cv2.putText(
             frame,
             f"Status: {status_text}",
-            (10, 160),
+            (10, 190),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.8,
             status_color,
@@ -215,7 +259,7 @@ with mp_hands.Hands(
         cv2.putText(
             frame,
             f"Points: {points}",
-            (10, 200),
+            (10, 230),
             cv2.FONT_HERSHEY_SIMPLEX,
             1,
             (255, 255, 0),
@@ -225,7 +269,7 @@ with mp_hands.Hands(
         cv2.putText(
             frame,
             f"Reward ready: {reward_ready}",
-            (10, 235),
+            (10, 265),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
             (200, 255, 200),
