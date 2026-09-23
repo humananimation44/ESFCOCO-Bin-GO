@@ -1,3 +1,4 @@
+#These are what we imported.
 import cv2
 import mediapipe as mp
 import time
@@ -85,7 +86,7 @@ with mp_hands.Hands(
     while True:
         success, frame = cap.read()
         if not success:
-            print("ERROR: Failed to read webcam frame.")
+            print("ERROR: Failed to read webcam frame, please try again or debug the code.")
             break
 
         frame = cv2.flip(frame, 1)
@@ -105,16 +106,16 @@ with mp_hands.Hands(
             status_color = (0, 255, 0)
             bin_color = (0, 255, 0)
         else:
-            status_text = "Show hand"
+            status_text = "To begin, bring a hand into the camera!"
             status_color = (0, 200, 255)
             bin_color = (0, 255, 0)
 
         cv2.rectangle(frame, (bin_x1, bin_y1), (bin_x2, bin_y2), bin_color, 3)
         cv2.putText(
             frame,
-            "BIN ZONE",
+            "Trashcan, Toss it here!",
             (bin_x1, bin_y1 - 10),
-            cv2.FONT_HERSHEY_SIMPLEX,
+            cv2.FONT_HERSHEY_DUPLEX,
             0.7,
             bin_color,
             2,
@@ -182,17 +183,17 @@ with mp_hands.Hands(
 
             elif reward_ready:
                 if now >= success_message_until:
-                    status_text = "Move hand into bin and open"
+                    status_text = "Now you drop it into the bin, for a reward!"
 
             else:
                 if now >= success_message_until:
-                    status_text = "Make a fist first"
+                    status_text = "Make a fist with your hand"
 
             cv2.putText(
                 frame,
                 f"Wrist: ({wrist_x}, {wrist_y})",
                 (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX,
+                cv2.FONT_HERSHEY_DUPLEX,
                 0.7,
                 (0, 255, 0),
                 2,
@@ -202,7 +203,7 @@ with mp_hands.Hands(
                 frame,
                 f"Index Tip: ({index_x}, {index_y})",
                 (10, 60),
-                cv2.FONT_HERSHEY_SIMPLEX,
+                cv2.FONT_HERSHEY_DUPLEX,
                 0.7,
                 (0, 255, 0),
                 2,
@@ -212,7 +213,7 @@ with mp_hands.Hands(
                 frame,
                 f"Handedness: {handedness_label}",
                 (10, 90),
-                cv2.FONT_HERSHEY_SIMPLEX,
+                cv2.FONT_HERSHEY_DUPLEX,
                 0.7,
                 (255, 200, 0),
                 2,
@@ -222,7 +223,7 @@ with mp_hands.Hands(
                 frame,
                 f"Hand State: {current_hand_state}",
                 (10, 120),
-                cv2.FONT_HERSHEY_SIMPLEX,
+                cv2.FONT_HERSHEY_DUPLEX,
                 0.8,
                 (255, 255, 0),
                 2,
@@ -232,7 +233,7 @@ with mp_hands.Hands(
                 frame,
                 f"Hand In Bin: {hand_fits_in_bin}",
                 (10, 150),
-                cv2.FONT_HERSHEY_SIMPLEX,
+                cv2.FONT_HERSHEY_DUPLEX,
                 0.7,
                 hand_box_color,
                 2,
@@ -244,13 +245,13 @@ with mp_hands.Hands(
         else:
             last_hand_state = "NONE"
             if now >= success_message_until:
-                status_text = "No hand detected"
+                status_text = "No hand yet detected"
 
         cv2.putText(
             frame,
             f"Status: {status_text}",
             (10, 190),
-            cv2.FONT_HERSHEY_SIMPLEX,
+            cv2.FONT_HERSHEY_DUPLEX,
             0.8,
             status_color,
             2,
@@ -260,7 +261,7 @@ with mp_hands.Hands(
             frame,
             f"Points: {points}",
             (10, 230),
-            cv2.FONT_HERSHEY_SIMPLEX,
+            cv2.FONT_HERSHEY_DUPLEX,
             1,
             (255, 255, 0),
             2,
@@ -270,14 +271,14 @@ with mp_hands.Hands(
             frame,
             f"Reward ready: {reward_ready}",
             (10, 265),
-            cv2.FONT_HERSHEY_SIMPLEX,
+            cv2.FONT_HERSHEY_DUPLEX,
             0.7,
             (200, 255, 200),
             2,
             cv2.LINE_AA
         )
 
-        cv2.imshow("Bin-go Hand Tracker", frame)
+        cv2.imshow("Bin-GO Littering and Recycling Tracker", frame)
 
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
