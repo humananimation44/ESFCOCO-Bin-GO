@@ -25,8 +25,8 @@ last_hand_state = "NONE"
 reward_ready = False
 success_message_until = 0
 
-BIN_WIDTH = 220
-BIN_HEIGHT = 220
+BIN_WIDTH = 420
+BIN_HEIGHT = 420
 SUCCESS_MESSAGE_SECONDS = 1.5
 HAND_BOX_PADDING = 20
 
