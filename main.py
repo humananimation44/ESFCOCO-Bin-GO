@@ -1,7 +1,9 @@
-#These are what we imported.
+# Welcome to our camera
 import cv2
 import mediapipe as mp
 import time
+# For the entrance screen don't tamper with the code it can break stuff mitt and hector.
+import numpy as np
 
 mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
@@ -19,8 +21,6 @@ if frame_width == 0 or frame_height == 0:
     frame_width = 640
     frame_height = 480
 
-fps = 20.0
-
 points = 0
 last_hand_state = "NONE"
 reward_ready = False
@@ -29,7 +29,64 @@ success_message_until = 0
 BIN_WIDTH = 420
 BIN_HEIGHT = 420
 SUCCESS_MESSAGE_SECONDS = 1.5
-HAND_BOX_PADDING = 20
+HAND_BOX_PADDING = 15
+
+def show_intro_screen():
+    splash_width = 1250
+    splash_height = 720
+
+    splash = np.zeros((splash_height, splash_width, 3), dtype=np.uint8)
+    splash[:] = (30, 25, 20)
+
+    cv2.rectangle(splash, (80, 80), (1200, 640), (50, 120, 80), 4)
+    cv2.rectangle(splash, (110, 110), (1170, 610), (20, 40, 30), -1)
+
+    cv2.putText(
+        splash,
+        "Welcome to Bin-GO! By Neel, Hector and Mitt.",
+        (250, 260),
+        cv2.FONT_HERSHEY_DUPLEX,
+        2.0,
+        (255, 255, 255),
+        3,
+        cv2.LINE_AA
+    )
+
+    cv2.putText(
+        splash,
+        "A demo to our recycling start-up, and how we plan to execute it.",
+        (245, 340),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        1.0,
+        (180, 255, 200),
+        2,
+        cv2.LINE_AA
+    )
+
+    cv2.putText(
+        splash,
+        "Bring your hand into the screen, not too close.",
+        (275, 410),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.9,
+        (220, 220, 220),
+        2,
+        cv2.LINE_AA
+    )
+
+    cv2.putText(
+        splash,
+        "The camera is now booting up",
+        (460, 520),
+        cv2.FONT_HERSHEY_DUPLEX,
+        1.0,
+        (0, 255, 180),
+        2,
+        cv2.LINE_AA
+    )
+
+    cv2.imshow("BIN-GO!/Bingo?", splash)
+    cv2.waitKey(4000)
 
 def count_extended_fingers(hand_landmarks, handedness_label):
     fingers_up = 0
@@ -86,7 +143,7 @@ with mp_hands.Hands(
     while True:
         success, frame = cap.read()
         if not success:
-            print("ERROR: Failed to read webcam frame, please try again or debug the code.")
+            print("ERROR: Failed to read webcam frame.")
             break
 
         frame = cv2.flip(frame, 1)
@@ -101,32 +158,32 @@ with mp_hands.Hands(
         bin_x2 = w - 40
         bin_y2 = h - 40
 
+        bin_color = (0, 220, 120)
+        status_text = "Show your hand to start"
+        status_color = (255, 255, 255)
+
         if now < success_message_until:
-            status_text = "Trash disposed! +10"
+            status_text = "Nice! +10"
             status_color = (0, 255, 0)
             bin_color = (0, 255, 0)
-        else:
-            status_text = "To begin, bring a hand into the camera!"
-            status_color = (0, 200, 255)
-            bin_color = (0, 255, 0)
 
-        cv2.rectangle(frame, (bin_x1, bin_y1), (bin_x2, bin_y2), bin_color, 3)
+        cv2.rectangle(frame, (bin_x1, bin_y1), (bin_x2, bin_y2), bin_color, 4)
         cv2.putText(
             frame,
-            "Trashcan, Toss it here!",
-            (bin_x1, bin_y1 - 10),
+            "DROP HERE",
+            (bin_x1 + 20, bin_y1 + 45),
             cv2.FONT_HERSHEY_DUPLEX,
-            0.7,
+            1.0,
             bin_color,
             2,
             cv2.LINE_AA
         )
 
         current_hand_state = "NONE"
-        handedness_label = "Unknown"
 
         if results.multi_hand_landmarks:
             hand_landmarks = results.multi_hand_landmarks[0]
+            handedness_label = "Unknown"
 
             if results.multi_handedness:
                 handedness_label = results.multi_handedness[0].classification[0].label
@@ -136,14 +193,6 @@ with mp_hands.Hands(
                 hand_landmarks,
                 mp_hands.HAND_CONNECTIONS
             )
-
-            wrist = hand_landmarks.landmark[0]
-            index_tip = hand_landmarks.landmark[8]
-
-            wrist_x = int(wrist.x * w)
-            wrist_y = int(wrist.y * h)
-            index_x = int(index_tip.x * w)
-            index_y = int(index_tip.y * h)
 
             current_hand_state = get_hand_state(hand_landmarks, handedness_label)
 
@@ -158,130 +207,87 @@ with mp_hands.Hands(
                 hand_y2 <= bin_y2
             )
 
-            hand_box_color = (255, 0, 0)
+            hand_box_color = (255, 80, 80)
             if hand_fits_in_bin:
                 hand_box_color = (0, 255, 0)
 
             cv2.rectangle(frame, (hand_x1, hand_y1), (hand_x2, hand_y2), hand_box_color, 2)
-            cv2.circle(frame, (index_x, index_y), 10, (0, 0, 255), -1)
 
             if current_hand_state == "FIST":
                 reward_ready = True
                 if now >= success_message_until:
-                    status_text = "Holding trash"
+                    status_text = "Nice, now move to the bin"
 
             elif reward_ready and last_hand_state == "FIST" and current_hand_state == "OPEN" and hand_fits_in_bin:
                 points += 10
                 reward_ready = False
                 success_message_until = time.time() + SUCCESS_MESSAGE_SECONDS
-                status_text = "Trash disposed! +10"
+                status_text = "Nice! +10"
                 status_color = (0, 255, 0)
 
             elif reward_ready and current_hand_state == "OPEN" and not hand_fits_in_bin:
                 if now >= success_message_until:
-                    status_text = "Fit whole hand inside bin"
+                    status_text = "Move a bit more into the bin"
 
             elif reward_ready:
                 if now >= success_message_until:
-                    status_text = "Now you drop it into the bin, for a reward!"
+                    status_text = "Open your hand to drop it"
 
             else:
                 if now >= success_message_until:
-                    status_text = "Make a fist with your hand"
-
-            cv2.putText(
-                frame,
-                f"Wrist: ({wrist_x}, {wrist_y})",
-                (10, 30),
-                cv2.FONT_HERSHEY_DUPLEX,
-                0.7,
-                (0, 255, 0),
-                2,
-                cv2.LINE_AA
-            )
-            cv2.putText(
-                frame,
-                f"Index Tip: ({index_x}, {index_y})",
-                (10, 60),
-                cv2.FONT_HERSHEY_DUPLEX,
-                0.7,
-                (0, 255, 0),
-                2,
-                cv2.LINE_AA
-            )
-            cv2.putText(
-                frame,
-                f"Handedness: {handedness_label}",
-                (10, 90),
-                cv2.FONT_HERSHEY_DUPLEX,
-                0.7,
-                (255, 200, 0),
-                2,
-                cv2.LINE_AA
-            )
-            cv2.putText(
-                frame,
-                f"Hand State: {current_hand_state}",
-                (10, 120),
-                cv2.FONT_HERSHEY_DUPLEX,
-                0.8,
-                (255, 255, 0),
-                2,
-                cv2.LINE_AA
-            )
-            cv2.putText(
-                frame,
-                f"Hand In Bin: {hand_fits_in_bin}",
-                (10, 150),
-                cv2.FONT_HERSHEY_DUPLEX,
-                0.7,
-                hand_box_color,
-                2,
-                cv2.LINE_AA
-            )
+                    status_text = "Make a fist to grab the item"
 
             last_hand_state = current_hand_state
 
         else:
             last_hand_state = "NONE"
             if now >= success_message_until:
-                status_text = "No hand yet detected"
+                status_text = "Show your hand to start"
 
         cv2.putText(
             frame,
-            f"Status: {status_text}",
-            (10, 190),
+            status_text,
+            (20, 40),
             cv2.FONT_HERSHEY_DUPLEX,
-            0.8,
+            0.9,
             status_color,
             2,
             cv2.LINE_AA
         )
+
         cv2.putText(
             frame,
-            f"Points: {points}",
-            (10, 230),
+            f"Score: {points}",
+            (20, 85),
             cv2.FONT_HERSHEY_DUPLEX,
-            1,
+            1.0,
             (255, 255, 0),
             2,
             cv2.LINE_AA
         )
+
         cv2.putText(
             frame,
-            f"Reward ready: {reward_ready}",
-            (10, 265),
-            cv2.FONT_HERSHEY_DUPLEX,
-            0.7,
-            (200, 255, 200),
-            2,
+            "Press R to reset | Q to quit",
+            (20, h - 20),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.55,
+            (220, 220, 220),
+            1,
             cv2.LINE_AA
         )
 
-        cv2.imshow("Bin-GO Littering and Recycling Tracker", frame)
+        cv2.imshow("Bin-Go", frame)
 
-        if cv2.waitKey(1) & 0xFF == ord("q"):
+        key = cv2.waitKey(1) & 0xFF
+
+        if key == ord("q"):
             break
+        elif key == ord("r"):
+            points = 0
+            reward_ready = False
+            last_hand_state = "NONE"
+            success_message_until = 0
 
 cap.release()
 cv2.destroyAllWindows()
