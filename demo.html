@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Bin-Go Camera Demo</title>
+        <style>
+            body {
+                max-width: 900px;
+                margin: 32px auto;
+                padding: 0 20px;
+                color: #202620;
+                font: 16px/1.5 system-ui, sans-serif;
+            }
+            #camera-feed {
+                display: block;
+                width: 100%;
+                min-height: 240px;
+                max-height: 72vh;
+                margin: 20px 0 12px;
+                background: #171a17;
+                object-fit: contain;
+            }
+            button {
+                margin-right: 8px;
+                padding: 8px 14px;
+                font: inherit;
+                cursor: pointer;
+            }
+            #camera-status {
+                min-height: 1.5em;
+            }
+        </style>
+    </head>
+    <body>
+        <p><a href="/">Back</a></p>
+        <h1>Bin-Go Camera Demo</h1>
+        <img id="camera-feed" alt="Live camera feed with hand tracking" hidden>
+        <button id="start-camera" type="button">Start camera</button>
+        <button id="stop-camera" type="button" disabled>Stop camera</button>
+        <p id="camera-status" role="status" aria-live="polite">Camera is off.</p>
+
+        <script>
+            const feed = document.querySelector("#camera-feed");
+            const startButton = document.querySelector("#start-camera");
+            const stopButton = document.querySelector("#stop-camera");
+            const status = document.querySelector("#camera-status");
+
+            startButton.addEventListener("click", () => {
+                feed.hidden = false;
+                feed.src = `/video_feed?start=${Date.now()}`;
+                startButton.disabled = true;
+                stopButton.disabled = false;
+                status.textContent = "Starting camera and hand tracking...";
+            });
+
+            stopButton.addEventListener("click", stopCamera);
+            feed.addEventListener("load", () => {
+                status.textContent = "Camera and hand tracking are running.";
+            });
+            feed.addEventListener("error", () => {
+                status.textContent = "Could not start the camera. Check camera access and that it is not in use by another app.";
+                stopCamera();
+            });
+
+            function stopCamera() {
+                feed.removeAttribute("src");
+                feed.hidden = true;
+                startButton.disabled = false;
+                stopButton.disabled = true;
+                status.textContent = "Camera is off.";
+            }
+
+            window.addEventListener("pagehide", stopCamera);
+        </script>
+    </body>
+</html>
