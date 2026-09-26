@@ -1,95 +1,51 @@
 <html>
     <head>
         <title>My Flask App</title>
+        <style>
+            body {
+                max-width: 900px;
+                margin: 32px auto;
+                padding: 0 20px;
+                color: #202620;
+                font: 16px/1.5 system-ui, sans-serif;
+            }
+            button {
+                margin-right: 8px;
+                padding: 8px 14px;
+                font: inherit;
+                cursor: pointer;
+            }
+            input {
+                margin-right: 8px;
+                padding: 8px 14px;
+                font: inherit;
+                cursor: pointer;
+            }
+            label {
+                margin-right: 8px;
+                padding: 8px 14px;
+                font: inherit;
+                cursor: pointer;
+            }
+        </style>
     </head>
     <body>
-        <h1>Demo</h1>
+        <center>
+        <h1>Prototype BIN-GO</h1>
         <form class= "grid" action="/result" method="post">
-            <button type="button" onclick="window.location.href='/demo'">Demo</button>
-        <!doctype html>
-        <html lang="en">
-            <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1">
-                <title>Camera Demo</title>
-                <style>
-                    body {
-                        max-width: 760px;
-                        margin: 40px auto;
-                        padding: 0 20px;
-                        color: #202620;
-                        font: 16px/1.5 system-ui, sans-serif;
-                    }
-                    video {
-                        display: block;
-                        width: 100%;
-                        max-height: 65vh;
-                        margin: 20px 0 12px;
-                        background: #171a17;
-                        object-fit: cover;
-                    }
-                    button {
-                        margin-right: 8px;
-                        padding: 8px 14px;
-                        font: inherit;
-                        cursor: pointer;
-                    }
-                    #camera-status {
-                        min-height: 1.5em;
-                    }
-                </style>
-            </head>
-            <body>
-                <p><a href="/">Back</a></p>
-                <h1>Camera Demo</h1>
-                <video id="camera" autoplay muted playsinline></video>
-                <button id="start-camera" type="button">Start camera</button>
-                <button id="stop-camera" type="button" disabled>Stop camera</button>
-                <p id="camera-status" role="status" aria-live="polite">Camera is off.</p>
-
-                <script>
-                    const video = document.querySelector("#camera");
-                    const startButton = document.querySelector("#start-camera");
-                    const stopButton = document.querySelector("#stop-camera");
-                    const status = document.querySelector("#camera-status");
-                    let cameraStream;
-
-                    startButton.addEventListener("click", startCamera);
-                    stopButton.addEventListener("click", stopCamera);
-
-                    async function startCamera() {
-                        if (!navigator.mediaDevices?.getUserMedia) {
-                            status.textContent = "Camera access requires localhost or a secure HTTPS connection.";
-                            return;
-                        }
-
-                        try {
-                            cameraStream = await navigator.mediaDevices.getUserMedia({
-                                video: { facingMode: "user" },
-                                audio: false,
-                            });
-                            video.srcObject = cameraStream;
-                            await video.play();
-                            startButton.disabled = true;
-                            stopButton.disabled = false;
-                            status.textContent = "Camera is on.";
-                        } catch (error) {
-                            status.textContent = error.name === "NotAllowedError"
-                                ? "Camera permission was denied. Allow camera access in your browser and try again."
-                                : "Could not start the camera. Check that it is connected and not being used by another app.";
-                        }
-                    }
-
-                    function stopCamera() {
-                        cameraStream?.getTracks().forEach((track) => track.stop());
-                        cameraStream = undefined;
-                        video.srcObject = null;
-                        startButton.disabled = false;
-                        stopButton.disabled = true;
-                        status.textContent = "Camera is off.";
-                    }
-
-                    window.addEventListener("pagehide", stopCamera);
-                </script>
-            </body>
-        </html>
+            {% if user != "not logged in" %}
+                <p>Welcome {{ user }}, Your score is: {{ score }}!</p>
+                <button type="button" onclick="window.location.href='/demo'">Demo</button>
+                <button type="button" onclick="window.location.href='/rewards'">Rewards</button>
+                <a href="/logout">Log Out</a>
+            {% else %}
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password">
+                <input type="submit" value="Log In/Sign Up" onclick="window.location.href='/result'">
+            {% endif %}
+        </form>
+        </center>
+    </body>
+</html>
