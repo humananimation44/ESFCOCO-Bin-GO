@@ -1,5 +1,5 @@
-<img width="1000" height="1000" alt="goal12a" src="https://github.com/user-attachments/assets/21da24ac-7c9b-4470-bbb7-1a940a84a152" />
-<img width="1000" height="1000" alt="goal13a" src="https://github.com/user-attachments/assets/cf12a9fd-dec5-4795-b168-fc1f1a91daea" />
+<img width="250" height="250" alt="goal12a" src="https://github.com/user-attachments/assets/21da24ac-7c9b-4470-bbb7-1a940a84a152" />
+<img width="250" height="250" alt="goal13a" src="https://github.com/user-attachments/assets/cf12a9fd-dec5-4795-b168-fc1f1a91daea" />
 
 # ESFCOCO-Bin-GO
 Team Members: Neel LUNIA, Hector YEUNG, Mitt NGAN.
