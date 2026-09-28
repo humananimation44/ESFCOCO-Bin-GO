@@ -3,8 +3,7 @@
 
 # 🗑️✨ ESFCOCO-Bin-GO ✨🗑️
 
-> **Team Members:** Neel LUNIA, Hector YEUNG, Mitt NGAN.
-> **Slideshow: https://canva.link/rn6ypr3hn9t2h48
+> **Team Members:** Neel LUNIA, Hector YEUNG, Mitt NGAN. Slideshow: https://canva.link/rn6ypr3hn9t2h48
 
 ---
 
