@@ -29,6 +29,7 @@ Adopting the camera-tracking model from MediaPipe, we added visuals using simple
 ## 🔗 Resources
 
 - **MediaPipe Hands:** [https://mediapipe.readthedocs.io/en/latest/solutions/hands.html](https://mediapipe.readthedocs.io/en/latest/solutions/hands.html)
+- **Reactbits:** https://reactbits.dev/backgrounds/ghost-fibers?lineColor=2eb357&glowColor=9aff00
 
 ---
 
